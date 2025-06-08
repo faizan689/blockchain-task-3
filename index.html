@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Consensus Mechanisms Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .consensus-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .consensus-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .consensus-card:hover {
+            border-color: #3498db;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .consensus-card.active {
+            border-color: #e74c3c;
+            background: #fff5f5;
+            box-shadow: 0 8px 25px rgba(231,76,60,0.2);
+        }
+
+        .consensus-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .consensus-card p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .validators-container {
+            margin-bottom: 20px;
+        }
+
+        .validators-container h4 {
+            color: #34495e;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .validator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .validator-item:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .validator-item.selected-validator {
+            border-color: #e74c3c;
+            background: #fff5f5;
+            box-shadow: 0 4px 12px rgba(231,76,60,0.3);
+        }
+
+        .validator-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .validator-value {
+            color: #7f8c8d;
+            font-family: monospace;
+        }
+
+        .simulate-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .simulate-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #1f618d);
+            transform: translateY(-2px);
+        }
+
+        .simulate-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .main-simulate {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .main-simulate-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(231,76,60,0.3);
+        }
+
+        .main-simulate-btn:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(231,76,60,0.4);
+        }
+
+        .main-simulate-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h3 {
+            color: #ecf0f1;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .log-output {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            color: #ecf0f1;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry strong {
+            color: #3498db;
+        }
+
+        .log-entry em {
+            color: #e74c3c;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .reset-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .consensus-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 Blockchain Consensus Simulator</h1>
+            <p>Compare Proof of Work, Proof of Stake, and Delegated Proof of Stake mechanisms</p>
+        </div>
+
+        <div class="main-content">
+            <div class="consensus-grid">
+                <!-- Proof of Work Card -->
+                <div class="consensus-card" id="pow-card">
+                    <h3>⚡ Proof of Work (PoW)</h3>
+                    <p>Miners compete using computational power to solve cryptographic puzzles and validate transactions.</p>
+                    
+                    <div class="validators-container">
+                        <h4>Active Miners:</h4>
+                        <div id="pow-validators"></div>
+                    </div>
+                    
+                    <button class="simulate-btn individual-simulate" onclick="simulateIndividual('pow')">
+                        Simulate PoW
+                    </button>
+                </div>
+
+                <!-- Proof of Stake Card -->
+                <div class="consensus-card" id="pos-card">
+                    <h3>🏛️ Proof of Stake (PoS)</h3>
+                    <p>Validators are chosen based on their stake in the network. Higher stake increases selection probability.</p>
+                    
+                    <div class="validators-container">
+                        <h4>Active Stakers:</h4>
+                        <div id="pos-validators"></div>
+                    </div>
+                    
+                    <button class="simulate-btn individual-simulate" onclick="simulateIndividual('pos')">
+                        Simulate PoS
+                    </button>
+                </div>
+
+                <!-- Delegated Proof of Stake Card -->
+                <div class="consensus-card" id="dpos-card">
+                    <h3>🗳️ Delegated Proof of Stake (DPoS)</h3>
+                    <p>Community votes for delegates who validate transactions. Democratic selection with representative validation.</p>
+                    
+                    <div class="validators-container">
+                        <h4>Active Delegates:</h4>
+                        <div id="dpos-validators"></div>
+                    </div>
+                    
+                    <button class="simulate-btn individual-simulate" onclick="simulateIndividual('dpos')">
+                        Simulate DPoS
+                    </button>
+                </div>
+            </div>
+
+            <div class="main-simulate">
+                <button class="main-simulate-btn" id="main-simulate-btn" onclick="runFullSimulation()">
+                    🚀 Run Complete Simulation
+                </button>
+                <br>
+                <button class="reset-btn" onclick="resetSimulation()">
+                    🔄 Reset & Regenerate Validators
+                </button>
+            </div>
+
+            <div class="results" id="results">
+                <h3>📊 Simulation Results</h3>
+                <div class="log-output" id="log-output"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let validators = {
+            pow: [],
+            pos: [],
+            dpos: []
+        };
+
+        let simulationResults = {
+            pow: null,
+            pos: null,
+            dpos: null
+        };
+
+        // Utility functions
+        function generateRandomValue(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logOutput = document.getElementById('log-output');
+            
+            if (!logOutput) {
+                console.log(`[${timestamp}] ${message}`);
+                return;
+            }
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logOutput.appendChild(logEntry);
+            console.log(`[${timestamp}] ${message}`);
+            
+            // Scroll to bottom of log
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        // Initialize validators with realistic values
+        function initializeValidators() {
+            try {
+                // PoW Miners with hash rates (TH/s)
+                validators.pow = [
+                    { id: 'Miner_Alpha', power: generateRandomValue(150, 950), type: 'miner' },
+                    { id: 'Miner_Beta', power: generateRandomValue(200, 800), type: 'miner' },
+                    { id: 'Miner_Gamma', power: generateRandomValue(300, 1200), type: 'miner' }
+                ];
+
+                // PoS Stakers with ETH amounts
+                validators.pos = [
+                    { id: 'Staker_X', stake: generateRandomValue(15000, 75000), type: 'staker' },
+                    { id: 'Staker_Y', stake: generateRandomValue(20000, 60000), type: 'staker' },
+                    { id: 'Staker_Z', stake: generateRandomValue(25000, 85000), type: 'staker' }
+                ];
+
+                // DPoS Delegates with vote counts
+                validators.dpos = [
+                    { id: 'Delegate_One', votes: generateRandomValue(5000, 25000), type: 'delegate' },
+                    { id: 'Delegate_Two', votes: generateRandomValue(8000, 30000), type: 'delegate' },
+                    { id: 'Delegate_Three', votes: generateRandomValue(6000, 28000), type: 'delegate' }
+                ];
+
+                updateAllValidatorDisplays();
+                log('Validators initialized successfully');
+            } catch (error) {
+                console.error('Error initializing validators:', error);
+                log('Error initializing validators: ' + error.message);
+            }
+        }
+
+        // Update validator displays
+        function updateValidatorDisplay(type) {
+            try {
+                const container = document.getElementById(`${type}-validators`);
+                if (!container) {
+                    console.warn(`Container ${type}-validators not found`);
+                    return;
+                }
+
+                let html = '';
+                
+                switch(type) {
+                    case 'pow':
+                        html = validators.pow.map(miner => 
+                            `<div class="validator-item" id="${type}-${miner.id}">
+                                <span class="validator-name">${miner.id}</span>
+                                <span class="validator-value">${formatNumber(miner.power)} TH/s</span>
+                            </div>`
+                        ).join('');
+                        break;
+                    
+                    case 'pos':
+                        html = validators.pos.map(staker => 
+                            `<div class="validator-item" id="${type}-${staker.id}">
+                                <span class="validator-name">${staker.id}</span>
+                                <span class="validator-value">${formatNumber(staker.stake)} ETH</span>
+                            </div>`
+                        ).join('');
+                        break;
+                    
+                    case 'dpos':
+                        html = validators.dpos.map(delegate => 
+                            `<div class="validator-item" id="${type}-${delegate.id}">
+                                <span class="validator-name">${delegate.id}</span>
+                                <span class="validator-value">${formatNumber(delegate.votes)} votes</span>
+                            </div>`
+                        ).join('');
+                        break;
+                }
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error(`Error updating ${type} display:`, error);
+            }
+        }
+
+        function updateAllValidatorDisplays() {
+            updateValidatorDisplay('pow');
+            updateValidatorDisplay('pos');
+            updateValidatorDisplay('dpos');
+        }
+
+        // Clear previous selections
+        function clearSelections() {
+            document.querySelectorAll('.selected-validator').forEach(el => {
+                el.classList.remove('selected-validator');
+            });
+            document.querySelectorAll('.consensus-card').forEach(card => {
+                card.classList.remove('active');
+            });
+        }
+
+        // Reset simulation
+        function resetSimulation() {
+            clearSelections();
+            const resultsDiv = document.getElementById('results');
+            if (resultsDiv) {
+                resultsDiv.classList.remove('show');
+            }
+            const logOutput = document.getElementById('log-output');
+            if (logOutput) {
+                logOutput.innerHTML = '';
+            }
+            initializeValidators();
+        }
+
+        // Consensus simulation functions
+        function simulatePoW() {
+            try {
+                log("=== PROOF OF WORK SIMULATION ===");
+                log("Miners competing with computational power:");
+                
+                validators.pow.forEach(miner => {
+                    log(`${miner.id}: ${formatNumber(miner.power)} TH/s`);
+                });
+
+                const winner = validators.pow.reduce((prev, current) => 
+                    prev.power > current.power ? prev : current
+                );
+
+                log(`🏆 PoW Winner: ${winner.id} with ${formatNumber(winner.power)} TH/s`);
+                log("Logic: Deterministic selection based on highest computational power");
+                
+                // Visual feedback
+                const winnerElement = document.getElementById(`pow-${winner.id}`);
+                if (winnerElement) {
+                    winnerElement.classList.add('selected-validator');
+                }
+                const powCard = document.getElementById('pow-card');
+                if (powCard) {
+                    powCard.classList.add('active');
+                }
+                
+                return {
+                    mechanism: 'Proof of Work',
+                    winner: winner,
+                    reason: `Highest computational power (${formatNumber(winner.power)} TH/s)`,
+                    type: 'pow'
+                };
+            } catch (error) {
+                console.error('Error in PoW simulation:', error);
+                log('Error in PoW simulation: ' + error.message);
+                return null;
+            }
+        }
+
+        function simulatePoS() {
+            try {
+                log("\n=== PROOF OF STAKE SIMULATION ===");
+                log("Stakers competing with stake amounts:");
+                
+                validators.pos.forEach(staker => {
+                    log(`${staker.id}: ${formatNumber(staker.stake)} ETH`);
+                });
+
+                const winner = validators.pos.reduce((prev, current) => 
+                    prev.stake > current.stake ? prev : current
+                );
+
+                log(`🏆 PoS Winner: ${winner.id} with ${formatNumber(winner.stake)} ETH`);
+                log("Logic: Deterministic selection based on highest stake amount");
+                
+                // Visual feedback
+                const winnerElement = document.getElementById(`pos-${winner.id}`);
+                if (winnerElement) {
+                    winnerElement.classList.add('selected-validator');
+                }
+                const posCard = document.getElementById('pos-card');
+                if (posCard) {
+                    posCard.classList.add('active');
+                }
+                
+                return {
+                    mechanism: 'Proof of Stake',
+                    winner: winner,
+                    reason: `Highest stake (${formatNumber(winner.stake)} ETH)`,
+                    type: 'pos'
+                };
+            } catch (error) {
+                console.error('Error in PoS simulation:', error);
+                log('Error in PoS simulation: ' + error.message);
+                return null;
+            }
+        }
+
+        function simulateDPoS() {
+            try {
+                log("\n=== DELEGATED PROOF OF STAKE SIMULATION ===");
+                log("Delegates with community votes:");
+                
+                validators.dpos.forEach(delegate => {
+                    log(`${delegate.id}: ${formatNumber(delegate.votes)} votes`);
+                });
+
+                // Find delegates with most votes
+                const maxVotes = Math.max(...validators.dpos.map(d => d.votes));
+                const topDelegates = validators.dpos.filter(d => d.votes === maxVotes);
+                
+                log(`Delegates with highest votes (${formatNumber(maxVotes)}): ${topDelegates.map(d => d.id).join(', ')}`);
+                
+                // Random selection among top delegates
+                const winner = topDelegates[Math.floor(Math.random() * topDelegates.length)];
+
+                log(`🏆 DPoS Winner: ${winner.id} selected randomly from top voted delegates`);
+                log("Logic: Random selection among delegates with most community votes");
+                
+                // Visual feedback
+                const winnerElement = document.getElementById(`dpos-${winner.id}`);
+                if (winnerElement) {
+                    winnerElement.classList.add('selected-validator');
+                }
+                const dposCard = document.getElementById('dpos-card');
+                if (dposCard) {
+                    dposCard.classList.add('active');
+                }
+                
+                return {
+                    mechanism: 'Delegated Proof of Stake',
+                    winner: winner,
+                    reason: `Random selection from top voted (${formatNumber(winner.votes)} votes)`,
+                    type: 'dpos'
+                };
+            } catch (error) {
+                console.error('Error in DPoS simulation:', error);
+                log('Error in DPoS simulation: ' + error.message);
+                return null;
+            }
+        }
+
+        // Individual simulation function
+        function simulateIndividual(type) {
+            try {
+                clearSelections();
+                const resultsDiv = document.getElementById('results');
+                if (resultsDiv) {
+                    resultsDiv.classList.add('show');
+                }
+                const logOutput = document.getElementById('log-output');
+                if (logOutput) {
+                    logOutput.innerHTML = '';
+                }
+                
+                const btn = document.querySelector(`#${type}-card .individual-simulate`);
+                if (!btn) return;
+                
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Simulating...';
+                
+                setTimeout(() => {
+                    let result;
+                    switch(type) {
+                        case 'pow':
+                            result = simulatePoW();
+                            break;
+                        case 'pos':
+                            result = simulatePoS();
+                            break;
+                        case 'dpos':
+                            result = simulateDPoS();
+                            break;
+                    }
+                    
+                    if (result) {
+                        displayIndividualResult(result);
+                    }
+                    
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }, 500);
+            } catch (error) {
+                console.error(`Error in ${type} simulation:`, error);
+                log(`Error in ${type} simulation: ` + error.message);
+            }
+        }
+
+        // Full simulation function
+        function runFullSimulation() {
+            try {
+                clearSelections();
+                const resultsDiv = document.getElementById('results');
+                if (resultsDiv) {
+                    resultsDiv.classList.add('show');
+                }
+                const logOutput = document.getElementById('log-output');
+                if (logOutput) {
+                    logOutput.innerHTML = '';
+                }
+                
+                const btn = document.getElementById('main-simulate-btn');
+                if (!btn) return;
+                
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Running Simulation...';
+                
+                // Reset results
+                simulationResults = {
+                    pow: null,
+                    pos: null,
+                    dpos: null
+                };
+                
+                // Run simulations with slight delay for visual effect
+                setTimeout(() => {
+                    simulationResults.pow = simulatePoW();
+                    
+                    setTimeout(() => {
+                        simulationResults.pos = simulatePoS();
+                        
+                        setTimeout(() => {
+                            simulationResults.dpos = simulateDPoS();
+                            
+                            // Show comparison
+                            log("\n=== SIMULATION COMPLETE ===");
+                            log("All three consensus mechanisms have been simulated");
+                            
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                        }, 800);
+                    }, 800);
+                }, 800);
+            } catch (error) {
+                console.error('Error in full simulation:', error);
+                log('Error in full simulation: ' + error.message);
+            }
+        }
+
+        // Display individual result
+        function displayIndividualResult(result) {
+            try {
+                const logOutput = document.getElementById('log-output');
+                if (!logOutput || !result) return;
+
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `
+                    <strong>${result.mechanism} Result:</strong><br>
+                    <em>Winner:</em> ${result.winner.id}<br>
+                    <em>Reason:</em> ${result.reason}
+                `;
+                logOutput.appendChild(logEntry);
+                
+                // Scroll to bottom of log
+                logOutput.scrollTop = logOutput.scrollHeight;
+            } catch (error) {
+                console.error('Error displaying result:', error);
+            }
+        }
+
+        // Initialize the simulator when page loads
+        window.addEventListener('load', function() {
+            try {
+                initializeValidators();
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
+        });
+    </script>
+</body>
+</html>
